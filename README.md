@@ -61,7 +61,6 @@ A miner reports: *"Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima."*
 | Risk | HIGH |
 | Saving if switched to concentrate + retort | 40.5 g |
 
-## API
 
 | Endpoint | Method | Description |
 |---|---|---|
@@ -69,30 +68,6 @@ A miner reports: *"Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima."*
 | `/walker/get_impact` | POST | Returns the cooperative totals. |
 | `/static/index.html` | GET | The web interface. |
 
-## Build instructions
-
-**Requirements:** Python 3.12 or newer, and an Anthropic API key.
-
-```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY=your-key-here    # Windows PowerShell: $env:ANTHROPIC_API_KEY="your-key-here"
-```
-
-Run the command-line demo (four sample batches):
-
-```bash
-jac run zebaki.jac
-```
-
-Run the web version, then open `http://localhost:8000/static/index.html`:
-
-```bash
-jac start server.jac --no_client
-```
-
-**Never commit your API key to the repository.**
 
 ## Deployment
 
