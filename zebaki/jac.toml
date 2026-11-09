@@ -1,5 +1,0 @@
-[project]
-name = "zebaki"
-version = "0.1.0"
-entry-point = "server.jac"
-kind = "api-service"

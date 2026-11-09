@@ -1,3 +1,0 @@
-jaclang==0.16.7
-byllm==0.6.19
-jac-scale==0.2.31
