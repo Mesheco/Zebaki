@@ -68,17 +68,6 @@ A miner reports: *"Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima."*
 | `/walker/get_impact` | POST | Returns the cooperative totals. |
 | `/static/index.html` | GET | The web interface. |
 
-
-## Deployment
-
-The app is deployed on Render with this start command:
-
-```bash
-jac start server.jac --port $PORT --no_client
-```
-
-Set `ANTHROPIC_API_KEY` in the Render environment settings.
-
 ## Project structure
 
 ```
