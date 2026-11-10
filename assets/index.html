@@ -3,96 +3,444 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zebaki – Mercury Tracker</title>
+<title>Zebaki – Mercury Monitoring</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #f6f4ef; --card: #ffffff; --ink: #1f2a24; --muted: #5d6b63;
-    --line: #e2ded4; --accent: #1f6f4a; --high: #b3261e; --med: #a15c00; --low: #1f6f4a;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #141816; --card: #1d2320; --ink: #e8ece9; --muted: #9aa8a0;
-      --line: #2e3833; --accent: #5cc08f; --high: #f2867f; --med: #f0b35c; --low: #5cc08f;
-    }
+    --forest: #0B3D2E;
+    --natural: #F4F7F0;
+    --gold: #D4A72C;
+    --sage: #DCEBDD;
+    --alert: #D92D20;
+    --alert-text: #B42318;
+    --alert-tint: #FDECEA;
+    --caution: #E9A23B;
+    --ink: #263238;
+    --muted: #55656A;
+    --card: #FFFFFF;
+    --line: #DDE5DC;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
-  h1 { margin: 0; font-size: 1.9rem; }
-  .tag { color: var(--muted); margin: 4px 0 20px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-          padding: 18px; margin-bottom: 16px; }
-  label { display: block; font-weight: 600; margin: 10px 0 4px; }
-  input, textarea { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px;
-                    background: var(--bg); color: var(--ink); font: inherit; }
-  textarea { min-height: 90px; resize: vertical; }
-  button { margin-top: 12px; background: var(--accent); color: #fff; border: 0; border-radius: 8px;
-           padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer; }
-  button:disabled { opacity: .6; cursor: wait; }
-  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .examples button { margin: 0; background: transparent; color: var(--accent);
-                     border: 1px solid var(--line); font-weight: 500; padding: 6px 10px; font-size: .9rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-  .stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-  .stat b { display: block; font-size: 1.4rem; }
-  .stat span { color: var(--muted); font-size: .85rem; }
-  .big b { color: var(--accent); }
-  .risk { display: inline-block; font-weight: 700; padding: 2px 10px; border-radius: 999px; border: 2px solid; }
-  .HIGH { color: var(--high); } .MEDIUM { color: var(--med); } .LOW { color: var(--low); }
-  .advice { background: var(--bg); border-left: 4px solid var(--accent); padding: 10px 12px;
-            border-radius: 6px; margin-top: 12px; }
+  body {
+    margin: 0; background: var(--natural); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .app { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--forest); color: var(--natural);
+    padding: 24px 18px; position: sticky; top: 0; height: 100vh;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    background: var(--natural); border-radius: 12px; padding: 4px;
+    display: inline-flex; flex-shrink: 0;
+  }
+  .logo svg { display: block; }
+  .brand-name { font-size: 1.25rem; font-weight: 700; letter-spacing: .02em; }
+  .brand-sub { font-size: .8rem; color: #B9D3C2; }
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav a {
+    color: var(--natural); text-decoration: none; padding: 10px 12px; border-radius: 10px;
+    font-weight: 500;
+  }
+  .nav a:hover { background: rgba(255, 255, 255, .1); }
+  .nav a:focus-visible, .lang select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .sidebar-foot { margin-top: auto; font-size: .8rem; color: #B9D3C2; }
+
+  /* Main area */
+  .main { min-width: 0; padding: 24px 28px 56px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  h1 { margin: 0; font-size: 1.8rem; color: var(--forest); }
+  .tag { color: var(--muted); margin: 4px 0 0; max-width: 60ch; }
+  .lang { display: flex; flex-direction: column; font-size: .8rem; color: var(--muted); font-weight: 600; gap: 4px; }
+  .lang select {
+    font: inherit; font-size: .95rem; color: var(--ink); background: var(--card);
+    border: 1px solid #C9D5CC; border-radius: 10px; padding: 8px 10px; min-width: 150px;
+  }
+  section { scroll-margin-top: 16px; }
+  .section-title {
+    font-size: .85rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--forest); font-weight: 700; margin: 28px 0 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content: ""; flex: 1; height: 2px; background: var(--gold); opacity: .6; border-radius: 2px; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; margin-bottom: 18px;
+    box-shadow: 0 1px 2px rgba(11, 61, 46, .06), 0 6px 18px rgba(11, 61, 46, .06);
+  }
+  h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--forest); }
   .muted { color: var(--muted); font-size: .9rem; }
-  .err { color: var(--high); }
-  h2 { font-size: 1.15rem; margin: 0 0 10px; }
+  .err { color: var(--alert-text); }
+
+  /* Forms */
+  label { display: block; font-weight: 600; margin: 12px 0 6px; color: var(--forest); }
+  input, textarea {
+    width: 100%; padding: 11px 12px; border: 1px solid #C9D5CC; border-radius: 10px;
+    background: #FBFCFA; color: var(--ink); font: inherit;
+  }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
+  textarea { min-height: 96px; resize: vertical; }
+  button {
+    margin-top: 14px; background: var(--forest); color: #fff; border: 0; border-radius: 10px;
+    padding: 11px 20px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: #0F4F3B; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  button:disabled { opacity: .6; cursor: wait; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .examples button {
+    margin: 0; background: var(--card); color: var(--forest);
+    border: 1px solid var(--forest); font-weight: 600; padding: 7px 12px; font-size: .9rem;
+  }
+  .examples button:hover { background: var(--sage); }
+
+  /* Result */
+  .result { border-left: 6px solid var(--forest); }
+  .result.is-high { border-left-color: var(--alert); }
+  .risk {
+    display: inline-block; font-weight: 700; font-size: .85rem; padding: 3px 12px;
+    border-radius: 999px; vertical-align: middle; margin-left: 6px; letter-spacing: .03em;
+  }
+  .risk.HIGH { background: var(--alert); color: #fff; }
+  .risk.MEDIUM { background: var(--caution); color: var(--ink); }
+  .risk.LOW { background: var(--sage); color: var(--forest); border: 1px solid var(--forest); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stat {
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #FBFCFA;
+  }
+  .stat b { display: block; font-size: 1.5rem; color: var(--ink); }
+  .stat span { color: var(--muted); font-size: .85rem; }
+  .stat.air { border-left: 4px solid var(--alert); }
+  .stat.air b { color: var(--alert); }
+  .stat.tail { border-left: 4px solid var(--caution); }
+  .stat.saved { background: var(--sage); border-color: var(--sage); margin-top: 12px; }
+  .stat.saved b { color: var(--forest); }
+  .advice {
+    background: var(--natural); border-left: 4px solid var(--gold);
+    padding: 12px 14px; border-radius: 10px; margin-top: 14px;
+  }
+
+  /* Dashboard */
+  .alert {
+    background: var(--alert-tint); color: var(--alert-text); border: 1px solid #F5B5AE;
+    border-radius: 12px; padding: 12px 14px; font-weight: 600; margin-bottom: 14px;
+  }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--sage); border-radius: 14px; padding: 14px 16px; }
+  .kpi b { display: block; font-size: 1.6rem; color: var(--forest); }
+  .kpi span { color: var(--muted); font-size: .85rem; }
+  .kpi.lost { border-left: 4px solid var(--gold); }
+  .kpi.air b { color: var(--alert); }
+  .kpi.tail { border-left: 4px solid var(--caution); }
+  .kpi.high b { color: var(--alert); }
+  .chart-box { position: relative; height: 280px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--forest); font-weight: 700; background: var(--sage); }
+  th:first-child { border-radius: 8px 0 0 8px; }
+  th:last-child { border-radius: 0 8px 8px 0; }
+  td.num, th.num { text-align: right; }
+  .pill-high {
+    background: var(--alert); color: #fff; font-weight: 700; padding: 2px 10px;
+    border-radius: 999px; font-size: .85rem;
+  }
+  .report-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .report-head button { margin-top: 0; }
+  #report-text { font-size: 1.02rem; color: var(--ink); }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; padding: 14px 16px; gap: 12px; }
+    .nav { flex-direction: row; overflow-x: auto; gap: 6px; }
+    .nav a { white-space: nowrap; padding: 8px 12px; }
+    .sidebar-foot { display: none; }
+    .main { padding: 18px 16px 48px; }
+    .chart-box { height: 240px; }
+  }
+
+  /* Print / save as PDF */
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    .app { display: block; }
+    .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
+    .kpi, .stat, th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .chart-box { height: 220px; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <h1>Zebaki</h1>
-  <p class="tag">Mercury tracker for artisanal gold miners. Report a batch in Swahili or English and see where the mercury went.</p>
+<div class="app">
 
-  <div class="card">
-    <label for="miner">Miner name</label>
-    <input id="miner" value="Juma">
-    <label for="msg">Batch report</label>
-    <textarea id="msg">Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima</textarea>
-    <div class="examples">
-      <button type="button" data-m="Amina" data-t="Used 30g mercury on concentrate from 500kg ore, then burned it in a retort">Concentrate + retort</button>
-      <button type="button" data-m="Juma" data-t="Tulichoma amalgam wazi bila retort, zebaki gramu 40 kwa kilo 150 za mchanga mzima">Open burning</button>
-      <button type="button" data-m="Amina" data-t="Leo tumetumia zebaki gramu 20 kwa kilo 100 za concentrate, tumetumia retort">Swahili + retort</button>
+  <aside class="sidebar no-print">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="44" height="44" role="img" aria-label="Zebaki logo">
+          <path d="M50 6C36 6 28 14 28 26c0 4 1.2 7 2.6 9C44 34 52 26 50 6z" fill="#3E9B5B"/>
+          <path d="M30 4c-5 6-9 12-9 18a9 9 0 0 0 18 0c0-6-4-12-9-18z" fill="#A9B8B3" stroke="#0B3D2E" stroke-width="1.5"/>
+          <ellipse cx="36" cy="50" rx="20" ry="9" fill="#D4A72C"/>
+          <ellipse cx="30" cy="46" rx="6" ry="2.5" fill="#F3D77A"/>
+        </svg>
+      </span>
+      <div>
+        <div class="brand-name">Zebaki</div>
+        <div class="brand-sub" data-i18n="brand_sub">Mercury monitoring</div>
+      </div>
     </div>
-    <button id="send">Analyse batch</button>
-    <p class="muted" id="status"></p>
-  </div>
+    <nav class="nav">
+      <a href="#dashboard" data-i18n="nav_dashboard">Dashboard</a>
+      <a href="#record" data-i18n="nav_record">Record a batch</a>
+      <a href="#report" data-i18n="nav_report">Summary report</a>
+      <a href="#about" data-i18n="nav_about">About</a>
+    </nav>
+    <div class="sidebar-foot" data-i18n="demo">Demo data</div>
+  </aside>
 
-  <div class="card" id="result" hidden>
-    <h2>This batch <span id="risk" class="risk"></span></h2>
-    <div class="grid">
-      <div class="stat"><b id="r-hg"></b><span>mercury used (g)</span></div>
-      <div class="stat"><b id="r-air"></b><span>to air (g)</span></div>
-      <div class="stat"><b id="r-tail"></b><span>to tailings (g)</span></div>
-    </div>
-    <p class="muted" id="r-method"></p>
-    <div class="stat big"><b id="r-saved"></b><span id="r-saved-label">grams that switching to concentrate + retort would save</span></div>
-    <div class="advice"><b>Ushauri:</b> <span id="advice"></span></div>
-  </div>
+  <div class="main">
+    <header class="topbar no-print">
+      <div>
+        <h1>Zebaki</h1>
+        <p class="tag" data-i18n="tagline">Mercury tracker for artisanal gold miners. Report a batch in English or Swahili and see where the mercury went.</p>
+      </div>
+      <label class="lang">
+        <span data-i18n="lang_label">Language</span>
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="sw">Kiswahili</option>
+        </select>
+      </label>
+    </header>
 
-  <div class="card">
-    <h2 id="coop-name">Cooperative impact</h2>
-    <div class="grid">
-      <div class="stat big"><b id="c-lost">–</b><span>mercury lost (g)</span></div>
-      <div class="stat"><b id="c-used">–</b><span>mercury used (g)</span></div>
-      <div class="stat"><b id="c-air">–</b><span>lost to air (g)</span></div>
-      <div class="stat"><b id="c-tail">–</b><span>lost to tailings (g)</span></div>
-      <div class="stat"><b id="c-batches">–</b><span>batches (high risk)</span></div>
-    </div>
-    <p class="muted">Loss factors are illustrative assumptions, not yet validated against field data. Each batch's card shows how much switching to concentrate + retort would save.</p>
+    <section id="dashboard">
+      <div class="section-title" data-i18n="dash_title">Cooperative dashboard</div>
+
+      <div id="alert" class="alert" role="alert" hidden></div>
+
+      <div class="card">
+        <h2 id="coop-name">Cooperative impact</h2>
+        <div class="kpis">
+          <div class="kpi"><b id="k-batches">–</b><span data-i18n="k_batches">batches recorded</span></div>
+          <div class="kpi"><b id="k-used">–</b><span data-i18n="k_used">mercury used (g)</span></div>
+          <div class="kpi lost"><b id="k-lost">–</b><span data-i18n="k_lost">mercury lost (g)</span></div>
+          <div class="kpi air"><b id="k-air">–</b><span data-i18n="k_air">released to air (g)</span></div>
+          <div class="kpi tail"><b id="k-tail">–</b><span data-i18n="k_tail">left in tailings (g)</span></div>
+          <div class="kpi high"><b id="k-high">–</b><span data-i18n="k_high">high-risk batches</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="chart_title">Losses by miner</h2>
+        <div class="chart-box"><canvas id="chart"></canvas></div>
+        <p class="muted" data-i18n="chart_note">Red: released to air. Amber: left in tailings. Both are estimates.</p>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="table_title">Miner details</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-i18n="th_miner">Miner</th>
+                <th class="num" data-i18n="th_batches">Batches</th>
+                <th class="num" data-i18n="th_used">Used (g)</th>
+                <th class="num" data-i18n="th_air">To air (g)</th>
+                <th class="num" data-i18n="th_tail">To tailings (g)</th>
+                <th class="num" data-i18n="th_high">High risk</th>
+              </tr>
+            </thead>
+            <tbody id="miner-rows"></tbody>
+          </table>
+        </div>
+        <p class="muted" id="no-miners" data-i18n="no_miners">No batches recorded yet.</p>
+      </div>
+    </section>
+
+    <section id="record" class="no-print">
+      <div class="section-title" data-i18n="record_title">Record a batch</div>
+
+      <div class="card">
+        <label for="miner" data-i18n="label_miner">Miner name</label>
+        <input id="miner" value="Juma">
+        <label for="msg" data-i18n="label_batch">Batch report</label>
+        <textarea id="msg">Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima</textarea>
+        <div class="examples">
+          <button type="button" data-m="Amina" data-t="Used 30g mercury on concentrate from 500kg ore, then burned it in a retort" data-i18n="ex_concentrate">Concentrate + retort</button>
+          <button type="button" data-m="Juma" data-t="Tulichoma amalgam wazi bila retort, zebaki gramu 40 kwa kilo 150 za mchanga mzima" data-i18n="ex_open">Open burning</button>
+          <button type="button" data-m="Amina" data-t="Leo tumetumia zebaki gramu 20 kwa kilo 100 za concentrate, tumetumia retort" data-i18n="ex_swahili">Swahili + retort</button>
+        </div>
+        <button id="send" data-i18n="btn_analyse">Analyse batch</button>
+        <p class="muted" id="status"></p>
+      </div>
+
+      <div class="card result" id="result" hidden>
+        <h2><span data-i18n="result_title">This batch</span> <span id="risk" class="risk"></span></h2>
+        <div class="grid">
+          <div class="stat"><b id="r-hg"></b><span data-i18n="stat_used">mercury used (g)</span></div>
+          <div class="stat air"><b id="r-air"></b><span data-i18n="stat_air">released to air (g)</span></div>
+          <div class="stat tail"><b id="r-tail"></b><span data-i18n="stat_tail">left in tailings (g)</span></div>
+        </div>
+        <p class="muted" id="r-method"></p>
+        <div class="stat saved"><b id="r-saved"></b><span id="r-saved-label" data-i18n="saved_label">grams that switching to concentrate + retort would save</span></div>
+        <div class="advice"><b data-i18n="advice_label">Ushauri</b> <span id="advice"></span></div>
+      </div>
+    </section>
+
+    <section id="report">
+      <div class="section-title" data-i18n="report_title">Summary report</div>
+      <div class="card">
+        <div class="report-head">
+          <h2 data-i18n="report_heading">Cooperative summary</h2>
+          <button class="no-print" id="print" type="button" data-i18n="btn_print">Print or save as PDF</button>
+        </div>
+        <p id="report-text" class="muted"></p>
+        <p class="muted" data-i18n="report_note">All figures are estimates based on illustrative loss factors, not measurements. Switching savings are shown for each batch in its result card.</p>
+      </div>
+    </section>
+
+    <section id="about" class="no-print">
+      <div class="section-title" data-i18n="nav_about">About</div>
+      <div class="card">
+        <h2 data-i18n="about_title">About Zebaki</h2>
+        <p data-i18n="about_body">Artisanal and small-scale gold miners often use mercury to extract gold, and much of it is lost to the air and to tailings. Zebaki helps a cooperative record each batch, estimate where its mercury goes, and see how a cleaner method would reduce those losses.</p>
+        <ul>
+          <li><b data-i18n="about_who_label">Who it's for:</b> <span data-i18n="about_who">miners, cooperatives and programme staff tracking mercury losses.</span></li>
+          <li><b data-i18n="about_how_label">How it works:</b> <span data-i18n="about_how">an AI step reads the report in Swahili or English, rules estimate the losses, and every batch is added to the cooperative's totals.</span></li>
+          <li><b data-i18n="about_lim_label">Limitations:</b> <span data-i18n="about_lim">loss factors are illustrative assumptions, not measurements. Zebaki estimates losses; it does not measure mercury in air, water or soil.</span></li>
+        </ul>
+      </div>
+    </section>
   </div>
-</main>
+</div>
 
 <script>
   const $ = (id) => document.getElementById(id);
+
+  const DICT = {
+    en: {
+      brand_sub: "Mercury monitoring",
+      tagline: "Mercury tracker for artisanal gold miners. Report a batch in English or Swahili and see where the mercury went.",
+      lang_label: "Language",
+      demo: "Demo data",
+      nav_dashboard: "Dashboard", nav_record: "Record a batch", nav_report: "Summary report", nav_about: "About",
+      about_title: "About Zebaki",
+      about_body: "Artisanal and small-scale gold miners often use mercury to extract gold, and much of it is lost to the air and to tailings. Zebaki helps a cooperative record each batch, estimate where its mercury goes, and see how a cleaner method would reduce those losses.",
+      about_who_label: "Who it's for:", about_who: "miners, cooperatives and programme staff tracking mercury losses.",
+      about_how_label: "How it works:", about_how: "an AI step reads the report in Swahili or English, rules estimate the losses, and every batch is added to the cooperative's totals.",
+      about_lim_label: "Limitations:", about_lim: "loss factors are illustrative assumptions, not measurements. Zebaki estimates losses; it does not measure mercury in air, water or soil.",
+      record_title: "Record a batch",
+      label_miner: "Miner name", label_batch: "Batch report",
+      ex_concentrate: "Concentrate + retort", ex_open: "Open burning", ex_swahili: "Swahili + retort",
+      btn_analyse: "Analyse batch",
+      status_working: "The agents are reading the report…",
+      status_error: "Something went wrong: ",
+      result_title: "This batch",
+      risk_HIGH: "HIGH", risk_MEDIUM: "MEDIUM", risk_LOW: "LOW",
+      read_as: "Read as:", ore_kg: "kg ore",
+      assumed_note: "(some details missing, worst case assumed)",
+      stat_used: "mercury used (g)", stat_air: "released to air (g)", stat_tail: "left in tailings (g)",
+      saved_label: "grams that switching to concentrate + retort would save",
+      saved_none: "grams saved: this batch already uses a better method",
+      advice_label: "Ushauri (in Swahili)",
+      amal_WHOLE_ORE: "whole ore", amal_CONCENTRATE: "concentrate", amal_MERCURY_FREE: "mercury-free", amal_UNKNOWN: "unknown",
+      burn_OPEN_BURNING: "open burning", burn_RETORT: "retort", burn_NONE: "no burning", burn_UNKNOWN: "unknown",
+      dash_title: "Cooperative dashboard",
+      alert_high: "{n} high-risk batches need attention.",
+      k_batches: "batches recorded", k_used: "mercury used (g)", k_lost: "mercury lost (g)",
+      k_air: "released to air (g)", k_tail: "left in tailings (g)", k_high: "high-risk batches",
+      chart_title: "Losses by miner",
+      chart_note: "Red: released to air. Amber: left in tailings. Both are estimates.",
+      ds_air: "To air (g)", ds_tail: "To tailings (g)",
+      table_title: "Miner details",
+      th_miner: "Miner", th_batches: "Batches", th_used: "Used (g)", th_air: "To air (g)", th_tail: "To tailings (g)", th_high: "High risk",
+      no_miners: "No batches recorded yet.",
+      report_title: "Summary report", report_heading: "Cooperative summary",
+      btn_print: "Print or save as PDF",
+      report_empty: "No batches have been recorded yet.",
+      report_text: "{b} batches from {n} {miners} recorded {used} g of mercury. An estimated {air} g was released to air and {tail} g was left in tailings, a total of {lost} g lost. {high} of {b} batches were rated high risk.",
+      miner_one: "miner", miner_many: "miners",
+      report_note: "All figures are estimates based on illustrative loss factors, not measurements. Switching savings are shown for each batch in its result card."
+    },
+    sw: {
+      brand_sub: "Ufuatiliaji wa zebaki",
+      tagline: "Kifuatiliaji cha zebaki kwa wachimbaji wadogo wa dhahabu. Ripoti kundi kwa Kiswahili au Kiingereza na uone zebaki ilipoenda.",
+      lang_label: "Lugha",
+      demo: "Data ya majaribio",
+      nav_dashboard: "Dashibodi", nav_record: "Rekodi kundi", nav_report: "Ripoti ya muhtasari", nav_about: "Kuhusu",
+      about_title: "Kuhusu Zebaki",
+      about_body: "Wachimbaji wadogo wa dhahabu mara nyingi hutumia zebaki kutenganisha dhahabu, na sehemu kubwa yake hupotea hewani na kwenye tailings. Zebaki husaidia ushirika kurekodi kila kundi, kukadiria zebaki inakoenda, na kuona jinsi njia safi zaidi zingepunguza hasara.",
+      about_who_label: "Kwa nani:", about_who: "wachimbaji, ushirika na maafisa wa programu wanaofuatilia hasara ya zebaki.",
+      about_how_label: "Jinsi inavyofanya kazi:", about_how: "AI husoma ripoti kwa Kiswahili au Kiingereza, kanuni zinakadiria hasara, na kila kundi linaongezwa kwenye jumla ya ushirika.",
+      about_lim_label: "Mipaka:", about_lim: "viwango vya hasara ni dhana za mfano, si vipimo. Zebaki inakadiria hasara; haipimi zebaki hewani, majini au ardhini.",
+      record_title: "Rekodi kundi",
+      label_miner: "Jina la mchimbaji", label_batch: "Ripoti ya kundi",
+      ex_concentrate: "Concentrate + retort", ex_open: "Kuchoma wazi", ex_swahili: "Kiswahili + retort",
+      btn_analyse: "Chambua kundi",
+      status_working: "Mawakala wanasoma ripoti…",
+      status_error: "Kuna tatizo: ",
+      result_title: "Kundi hili",
+      risk_HIGH: "JUU", risk_MEDIUM: "WASTANI", risk_LOW: "CHINI",
+      read_as: "Imesomwa kama:", ore_kg: "kg za mchanga",
+      assumed_note: "(baadhi ya taarifa hazikuwepo, hali mbaya zaidi imedhaniwa)",
+      stat_used: "zebaki iliyotumika (g)", stat_air: "iliyotoka hewani (g)", stat_tail: "iliyobaki kwenye tailings (g)",
+      saved_label: "gramu ambazo kubadili kwenda concentrate + retort kungeokoa",
+      saved_none: "gramu zilizookolewa: kundi hili tayari linatumia njia bora",
+      advice_label: "Ushauri",
+      amal_WHOLE_ORE: "mchanga mzima", amal_CONCENTRATE: "concentrate", amal_MERCURY_FREE: "bila zebaki", amal_UNKNOWN: "haijulikani",
+      burn_OPEN_BURNING: "kuchoma wazi", burn_RETORT: "retort", burn_NONE: "hakuna kuchoma", burn_UNKNOWN: "haijulikani",
+      dash_title: "Dashibodi ya ushirika",
+      alert_high: "Makundi {n} ya hatari kubwa yanahitaji uangalizi.",
+      k_batches: "makundi yaliyorekodiwa", k_used: "zebaki iliyotumika (g)", k_lost: "zebaki iliyopotea (g)",
+      k_air: "iliyotoka hewani (g)", k_tail: "iliyobaki kwenye tailings (g)", k_high: "makundi ya hatari kubwa",
+      chart_title: "Hasara kwa mchimbaji",
+      chart_note: "Nyekundu: iliyotoka hewani. Amber: iliyobaki kwenye tailings. Zote ni makadirio.",
+      ds_air: "Hewani (g)", ds_tail: "Tailings (g)",
+      table_title: "Maelezo ya wachimbaji",
+      th_miner: "Mchimbaji", th_batches: "Makundi", th_used: "Iliyotumika (g)", th_air: "Hewani (g)", th_tail: "Tailings (g)", th_high: "Hatari kubwa",
+      no_miners: "Hakuna kundi lililorekodiwa bado.",
+      report_title: "Ripoti ya muhtasari", report_heading: "Muhtasari wa ushirika",
+      btn_print: "Chapisha au hifadhi kama PDF",
+      report_empty: "Hakuna kundi lililorekodiwa bado.",
+      report_text: "Makundi {b} kutoka kwa {n} {miners} yamerekodi jumla ya gramu {used} za zebaki. Takriban gramu {air} zimetolewa hewani na gramu {tail} zimebaki kwenye tailings, jumla ya gramu {lost} zilizopotea. Makundi {high} kati ya {b} yamepimwa kuwa hatari kubwa.",
+      miner_one: "mchimbaji", miner_many: "wachimbaji",
+      report_note: "Takwimu zote ni makadirio kulingana na viwango vya mfano vya hasara, si vipimo. Akiba ya kubadili njia inaonyeshwa kwa kila kundi kwenye kadi yake ya matokeo."
+    }
+  };
+
+  let lang = "en";
+  try {
+    const saved = localStorage.getItem("zebaki-lang");
+    if (saved === "en" || saved === "sw") lang = saved;
+  } catch (e) {}
+
+  let lastResult = null;
+  let lastImpact = null;
+  let chart = null;
+
+  function t(key) {
+    const d = DICT[lang] || DICT.en;
+    return d[key] !== undefined ? d[key] : (DICT.en[key] !== undefined ? DICT.en[key] : key);
+  }
+
+  function fmt(text, vars) {
+    return text.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : ""));
+  }
+
+  function esc(text) {
+    const d = document.createElement("div");
+    d.textContent = String(text);
+    return d.innerHTML;
+  }
 
   async function call(walker, body) {
     const res = await fetch("/walker/" + walker, {
@@ -107,54 +455,141 @@
     return reports[0];
   }
 
-  function showImpact(i) {
-    if (!i) return;
-    $("coop-name").textContent = i.cooperative;
-    $("c-lost").textContent = Math.round((i.air_g + i.tailings_g) * 10) / 10;
-    $("c-used").textContent = i.used_g;
-    $("c-air").textContent = i.air_g;
-    $("c-tail").textContent = i.tailings_g;
-    $("c-batches").textContent = i.batches + " (" + i.high_risk + ")";
+  function renderResult(r) {
+    const risk = r.estimate.risk;
+    $("risk").textContent = t("risk_" + risk);
+    $("risk").className = "risk " + risk;
+    $("result").className = "card result" + (risk === "HIGH" ? " is-high" : "");
+    $("r-hg").textContent = r.batch.mercury_g;
+    $("r-air").textContent = r.estimate.to_air_g;
+    $("r-tail").textContent = r.estimate.to_tailings_g;
+    $("r-method").textContent = t("read_as") + " " + r.batch.ore_kg + " " + t("ore_kg") + " · " +
+      t("amal_" + r.batch.amalgamation) + " · " + t("burn_" + r.batch.burning) +
+      (r.estimate.assumed ? " " + t("assumed_note") : "");
+    const s = r.if_switched;
+    $("r-saved").textContent = s.saved_g;
+    $("r-saved-label").textContent = s.saved_g > 0 ? t("saved_label") : t("saved_none");
+    $("advice").textContent = r.advice;
+    $("result").hidden = false;
   }
+
+  function renderDashboard(i) {
+    lastImpact = i;
+    if (!i) return;
+    const lost = Math.round((i.air_g + i.tailings_g) * 10) / 10;
+    const rows = i.miners || [];
+
+    $("coop-name").textContent = i.cooperative;
+    $("k-batches").textContent = i.batches;
+    $("k-used").textContent = i.used_g;
+    $("k-lost").textContent = lost;
+    $("k-air").textContent = i.air_g;
+    $("k-tail").textContent = i.tailings_g;
+    $("k-high").textContent = i.high_risk;
+
+    const alert = $("alert");
+    alert.hidden = i.high_risk === 0;
+    alert.textContent = fmt(t("alert_high"), { n: i.high_risk });
+
+    $("miner-rows").innerHTML = rows.map((m) =>
+      "<tr><td>" + esc(m.name) + "</td>" +
+      "<td class='num'>" + m.batches + "</td>" +
+      "<td class='num'>" + m.used_g + "</td>" +
+      "<td class='num'>" + m.air_g + "</td>" +
+      "<td class='num'>" + m.tailings_g + "</td>" +
+      "<td class='num'>" + (m.high_risk > 0 ? "<span class='pill-high'>" + m.high_risk + "</span>" : "0") + "</td></tr>"
+    ).join("");
+    $("no-miners").hidden = rows.length > 0;
+
+    renderChart(rows);
+
+    $("report-text").textContent = i.batches === 0 ? t("report_empty") : fmt(t("report_text"), {
+      b: i.batches,
+      n: rows.length,
+      miners: rows.length === 1 ? t("miner_one") : t("miner_many"),
+      used: i.used_g,
+      air: i.air_g,
+      tail: i.tailings_g,
+      lost: lost,
+      high: i.high_risk
+    });
+  }
+
+  function renderChart(rows) {
+    if (!window.Chart) return;
+    if (chart) chart.destroy();
+    chart = new Chart($("chart"), {
+      type: "bar",
+      data: {
+        labels: rows.map((m) => m.name),
+        datasets: [
+          { label: t("ds_air"), data: rows.map((m) => m.air_g), backgroundColor: "#D92D20", borderRadius: 6 },
+          { label: t("ds_tail"), data: rows.map((m) => m.tailings_g), backgroundColor: "#E9A23B", borderRadius: 6 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#263238" } } },
+        scales: {
+          x: { stacked: true, ticks: { color: "#263238" }, grid: { display: false } },
+          y: {
+            stacked: true, beginAtZero: true,
+            ticks: { color: "#55656A" },
+            grid: { color: "#E6ECE4" },
+            title: { display: true, text: "g", color: "#55656A" }
+          }
+        }
+      }
+    });
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    $("lang").value = lang;
+    if (lastResult) renderResult(lastResult);
+    if (lastImpact) renderDashboard(lastImpact);
+  }
+
+  $("lang").onchange = () => {
+    lang = $("lang").value;
+    try { localStorage.setItem("zebaki-lang", lang); } catch (e) {}
+    applyLanguage();
+  };
 
   document.querySelectorAll(".examples button").forEach((b) => {
     b.onclick = () => { $("miner").value = b.dataset.m; $("msg").value = b.dataset.t; };
   });
 
+  $("print").onclick = () => window.print();
+
   $("send").onclick = async () => {
     const btn = $("send");
     btn.disabled = true;
     $("status").className = "muted";
-    $("status").textContent = "The agents are reading the report…";
+    $("status").textContent = t("status_working");
     try {
-      const r = await call("analyse_batch", { miner: $("miner").value.trim() || "Unknown", message: $("msg").value });
-      $("risk").textContent = r.estimate.risk;
-      $("risk").className = "risk " + r.estimate.risk;
-      $("r-hg").textContent = r.batch.mercury_g;
-      $("r-air").textContent = r.estimate.to_air_g;
-      $("r-tail").textContent = r.estimate.to_tailings_g;
-      $("r-method").textContent = "Read as: " + r.batch.ore_kg + " kg ore · " +
-        r.batch.amalgamation.replace("_", " ").toLowerCase() + " · " +
-        r.batch.burning.replace("_", " ").toLowerCase() +
-        (r.estimate.assumed ? " (some details missing, worst case assumed)" : "");
-      const s = r.if_switched;
-      $("r-saved").textContent = s.saved_g;
-      $("r-saved-label").textContent = s.saved_g > 0
-        ? "grams that switching to concentrate + retort would save"
-        : "grams saved: this batch already uses a better method";
-      $("advice").textContent = r.advice;
-      $("result").hidden = false;
-      showImpact(r.impact);
+      const r = await call("analyse_batch", {
+        miner: $("miner").value.trim() || "Unknown",
+        message: $("msg").value
+      });
+      lastResult = r;
+      renderResult(r);
+      renderDashboard(r.impact);
       $("status").textContent = "";
     } catch (e) {
       $("status").className = "err";
-      $("status").textContent = "Something went wrong: " + e.message;
+      $("status").textContent = t("status_error") + e.message;
     } finally {
       btn.disabled = false;
     }
   };
 
-  call("get_impact").then(showImpact).catch(() => {});
+  applyLanguage();
+  call("get_impact").then(renderDashboard).catch(() => {});
 </script>
 </body>
 </html>

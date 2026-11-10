@@ -139,16 +139,35 @@ def impact_summary(coop: Cooperative) -> dict {
     tailings: float = 0.0;
     batches = 0;
     high = 0;
+    miner_rows = [];
     for m in [coop --> [?:Miner]] {
+        m_used: float = 0.0;
+        m_air: float = 0.0;
+        m_tail: float = 0.0;
+        m_batches = 0;
+        m_high = 0;
         for r in [m --> [?:BatchRecord]] {
             used += r.mercury_g;
             air += r.to_air_g;
             tailings += r.to_tailings_g;
             batches += 1;
+            m_used += r.mercury_g;
+            m_air += r.to_air_g;
+            m_tail += r.to_tailings_g;
+            m_batches += 1;
             if r.risk == "HIGH" {
                 high += 1;
+                m_high += 1;
             }
         }
+        miner_rows.append({
+            "name": m.name,
+            "batches": m_batches,
+            "used_g": int(m_used * 10 + 0.5) / 10,
+            "air_g": int(m_air * 10 + 0.5) / 10,
+            "tailings_g": int(m_tail * 10 + 0.5) / 10,
+            "high_risk": m_high
+        });
     }
     return {
         "cooperative": coop.name,
@@ -157,7 +176,8 @@ def impact_summary(coop: Cooperative) -> dict {
         "used_g": int(used * 10 + 0.5) / 10,
         "air_g": int(air * 10 + 0.5) / 10,
         "tailings_g": int(tailings * 10 + 0.5) / 10,
-        "avoided_g": int((used - air - tailings) * 10 + 0.5) / 10
+        "avoided_g": int((used - air - tailings) * 10 + 0.5) / 10,
+        "miners": miner_rows
     };
 }
 
