@@ -1,41 +1,36 @@
 # Zebaki 🌍
 
-**Mercury tracking and reduction for artisanal gold mining, powered by multi-agent AI.**
-
-Zebaki (Swahili for *mercury*) helps artisanal and small-scale gold miners (ASGM) and their cooperatives estimate how much mercury each batch releases to air and to tailings. Miners describe a batch in Swahili or English. Zebaki returns a risk rating, plain-language advice and the mercury that a cleaner method would save, and adds each batch to the cooperative's running total.
+**Zebaki** (Swahili for *mercury*) is a prototype multi-agent tool that helps artisanal and small-scale gold miners (ASGM), and the cooperatives that support them, see how much mercury each batch releases to air and to tailings. A miner describes a batch in Swahili or English. The agents turn that into an estimate, a risk rating, practical advice and a "what if" saving, and add the batch to the cooperative's running totals on a dashboard with a printable summary report.
 
 Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
-**Live demo:** [https://your-service-name.onrender.com/static/index.html](https://your-service-name.onrender.com/static/index.html)
-*The free hosting tier sleeps when idle. The first visit may take about a minute.*
-
----
+**Live demo:** [https://your-service-name.onrender.com/static/index.html](https://your-service-name.onrender.com/static/index.html) *(replace with your link once deployed)*
 
 ## The problem
 
-Artisanal gold mining is one of the largest sources of mercury pollution in the world. Miners use mercury to capture gold, and much of it is lost to tailings, soil and water. Much of the rest is released to the air when the amalgam is burned in the open. Most miners have no simple way to measure these losses or to compare them with cleaner methods.
+ASGM is one of the largest sources of mercury pollution in the world. Miners use mercury to capture gold from ore. Much of it is lost to tailings, soil and water, and much of the rest is released to the air when the amalgam is burned in the open. Most miners have no simple way to know how much mercury they lose per batch, or what a cleaner method would save.
 
 ## Who it is for
 
-- **Miners and mining cooperatives**, who want to see their losses and identify cheaper, cleaner methods.
-- **NGOs and programme staff**, who track progress across cooperatives.
+- **Miners and mining cooperatives**, who want to see their losses and find cheaper, cleaner methods.
+- **Environmental programme officers and NGOs**, who track cooperative-level progress.
 
 ## How it works
 
-Each batch passes through four agents and a rules-based estimator:
+Every batch follows the same path through the system:
 
 ```mermaid
 flowchart TD
-    M[Miner message in Swahili or English] --> I
-    I[Intake agent - AI NLP - extracts batch details] --> E
-    E[Estimator - rules - mercury to air and tailings and risk] --> A
+    M[Miner report in Swahili or English] --> I
+    I[1. Intake agent - AI NLP - extracts batch details] --> E
+    E[2. Estimator - rules - mercury to air and tailings and risk] --> A
     E --> W
     E --> G
-    A[Advisor agent - AI NLP - advice in Swahili] --> R
-    W[What-if calculator - rules - grams saved by switching] --> R
-    G[Cooperative graph - Jac - Cooperative to Miner to BatchRecord] --> P
-    P[Impact walker - totals used lost and high-risk] --> R
-    R[Response to the page]
+    A[3a. Advisor agent - AI NLP - advice in Swahili] --> R
+    W[3b. What-if calculator - rules - grams saved by switching] --> R
+    G[4. Cooperative graph - Jac - Cooperative to Miner to BatchRecord] --> P
+    P[5. Impact totals - used, lost, high-risk, per miner] --> R
+    R[Response to the web page]
 ```
 
 | Component | Type | Role |
@@ -44,56 +39,104 @@ flowchart TD
 | Estimator | Rules | Applies loss factors to estimate mercury lost to air and tailings, and assigns a risk rating (HIGH, MEDIUM or LOW). |
 | Advisor agent | AI (NLP) | Writes two or three sentences in Swahili explaining the result and suggesting one practical step. |
 | What-if calculator | Rules | Estimates the grams that switching to concentrate + retort would save. |
-| Cooperative graph | Jac graph | Links each batch to its miner and cooperative. |
-| Impact walker | Jac graph | Adds up the cooperative totals: mercury used, lost to air, lost to tailings and high-risk batches. |
+| Cooperative graph | Jac graph | Links each batch to its miner and cooperative, so totals always add up correctly. |
+| Impact totals | Jac | Adds up the cooperative totals and the totals for each miner. |
 
 **Design choice:** AI is used only where language is involved. All loss calculations are rules-based, so every figure can be checked and cited.
 
-## Example
+**Two ways to run it:** the command-line demo (`zebaki.jac`) walks the graph with a Jac walker to produce the totals, while the web version (`server.jac`) produces the same totals with a function. Both use the same estimator and graph.
 
-A miner reports: *"Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima."*
+## The web page
 
-| Result | Value |
+The page in `assets/index.html` has five parts:
+
+- **Language switch.** English is the default. Choose Kiswahili from the dropdown to translate the labels, the dashboard, the table and the summary report. The Ushauri advice is written in Swahili in both modes.
+- **Record a batch.** Enter a miner name and a report, or use one of the example buttons. The result card shows the risk rating, the grams used, released to air and left in tailings, the switching saving, and the advice.
+- **Cooperative dashboard.** Headline figures, a chart of losses by miner, and a table of miner details. High-risk batches are flagged in red.
+- **Summary report.** A plain-language summary of the totals, with a button to print or save as PDF.
+- **About.** Background, how the system works, and its limitations.
+
+## Web endpoints
+
+| Endpoint | What it does |
 |---|---|
-| Mercury used | 50 g |
-| Lost to air | 12.5 g |
-| Lost to tailings | 37.5 g |
-| Risk | HIGH |
-| Saving if switched to concentrate + retort | 40.5 g |
+| `POST /walker/analyse_batch` | Body: `{"miner": "Juma", "message": "..."}`. Runs the steps above and returns the batch, estimate, advice, what-if saving and cooperative totals, including totals per miner. |
+| `POST /walker/get_impact` | Returns the cooperative totals, including totals per miner, without adding a batch. |
+| `/static/index.html` | The web page that calls the two endpoints above. |
 
+## Environmental benefit
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/walker/analyse_batch` | POST | Body: `{"miner": "Juma", "message": "..."}`. Returns the batch, estimate, advice, what-if saving and cooperative totals. |
-| `/walker/get_impact` | POST | Returns the cooperative totals. |
-| `/static/index.html` | GET | The web interface. |
+Zebaki measures impact in **grams of mercury**:
 
-## Project structure
-
-```
-zebaki/
-├── server.jac          # Agents, estimator, graph and web endpoints
-├── zebaki.jac          # Command-line demo
-├── assets/index.html   # Web interface
-├── jac.toml            # Project configuration
-└── requirements.txt    # Pinned dependencies
-```
+- **Released to air:** from open burning, or from amalgam not captured by a retort.
+- **Left in tailings:** left in soil and water, mainly from whole-ore amalgamation.
+- **Could have saved:** the grams that switching to concentrate + retort would keep out of the air and tailings, shown for each batch.
 
 ## Limitations
 
-- **Loss factors are prototype assumptions.** The values in `server.jac` (for example 75% tailings loss for whole-ore amalgamation and 90% retort capture) are placeholders. They must be verified against published ASGM guidance before any real use. Sources: *[add UNEP / Minamata Convention / Global Mercury Partnership references]*.
+- **The loss factors are illustrative assumptions.** The values in `server.jac` (for example 75% tailings loss for whole-ore amalgamation and 90% retort capture) are placeholders. They are not yet validated against field data or published measurements, and they must be replaced with cited figures before any real use.
 - **Estimates, not measurements.** Zebaki does not measure mercury in air, water or soil.
-- **Free-text interpretation.** Unclear messages may be misread. Missing details are flagged to the miner and treated as worst case.
-- **Not yet field-tested** with miners or cooperatives.
-- **"Avoided" is relative.** It compares against a worst case in which all mercury is lost.
+- **AI reads free text.** Unclear or incomplete messages may be misread. Missing details are marked `UNKNOWN`, treated as worst case, and flagged to the miner.
+- **Advice is AI-generated.** It is not checked by the rules and should be reviewed before it is given to miners.
+- **Not yet validated with miners or cooperatives.** Field testing is the next step.
+- **"Avoided" is relative.** It compares with a worst case in which all mercury is lost.
+- **Totals are kept for the running server.** The demo data is for demonstration only.
 
-## Next steps
+## Tools used
 
-- Verify loss factors against published sources and replace the placeholders.
-- Field-test with a cooperative and collect feedback from miners.
-- Add SMS or WhatsApp access for miners without smartphones.
-- Add cost and payback estimates for switching methods.
+- **Jac** (jaclang) for the agents, graph and web server
+- **byLLM** for the AI calls
+- **Claude** (Anthropic API) for the Intake and Advisor agents
+- **jac-scale** for serving the web page
+- **Chart.js** (loaded from cdnjs) for the dashboard chart
+- Plain HTML, CSS and JavaScript for the page
+
+## Run it locally
+
+1. Install Python 3.12 or newer.
+2. Create and activate a virtual environment:
+   ```
+   python -m venv venv
+   venv\Scripts\activate          # Windows
+   source venv/bin/activate       # macOS / Linux
+   ```
+3. Install the requirements:
+   ```
+   pip install -r requirements.txt
+   ```
+4. Set your API key. **Never commit it to the repository.**
+   ```
+   $env:ANTHROPIC_API_KEY="your-key-here"       # Windows PowerShell
+   export ANTHROPIC_API_KEY=your-key-here       # macOS / Linux
+   ```
+5. Run the command-line demo (four sample batches):
+   ```
+   jac run zebaki.jac
+   ```
+6. Run the web version and open the page:
+   ```
+   jac start server.jac --no_client
+   ```
+   Then open `http://localhost:8000/static/index.html`.
+
+## Project files
+
+- `zebaki.jac`: command-line demo of the full flow
+- `server.jac`: the agents, estimator, graph, totals and web endpoints
+- `assets/index.html`: the web page (dashboard, language switch, summary report)
+- `requirements.txt`: pinned versions tested with this project
+- `jac.toml`: project configuration (the admin portal is disabled)
+
+## Deployment
+
+The web version runs with this start command on a hosting service such as Render:
+
+```
+jac start server.jac --port $PORT --no_client
+```
+
+Set `ANTHROPIC_API_KEY` in the service's environment settings, and set `PYTHON_VERSION` to `3.12.7`. The server needs more memory than the smallest free tier provides, so use a paid instance. Free instances also sleep when idle, so the first visit may take about a minute.
 
 ## Licence and data
 
-Built during the hackathon. No real miner data is included. All sample batches are invented for demonstration.
+Built during the hackathon. No real miner data is included. All sample batches are invented for demonstration, and the miner names (Juma, Amina) are fictional.
