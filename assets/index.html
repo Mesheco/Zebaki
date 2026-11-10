@@ -87,7 +87,7 @@
       <div class="stat"><b id="c-tail">–</b><span>lost to tailings (g)</span></div>
       <div class="stat"><b id="c-batches">–</b><span>batches (high risk)</span></div>
     </div>
-    <p class="muted">Loss factors are prototype assumptions based on published ASGM guidance. Each batch's card shows how much switching to concentrate + retort would save.</p>
+    <p class="muted">Loss factors are illustrative assumptions, not yet validated against field data. Each batch's card shows how much switching to concentrate + retort would save.</p>
   </div>
 </main>
 
@@ -110,7 +110,7 @@
   function showImpact(i) {
     if (!i) return;
     $("coop-name").textContent = i.cooperative;
-    $("c-lost").textContent = (i.air_g + i.tailings_g).toFixed(1);
+    $("c-lost").textContent = Math.round((i.air_g + i.tailings_g) * 10) / 10;
     $("c-used").textContent = i.used_g;
     $("c-air").textContent = i.air_g;
     $("c-tail").textContent = i.tailings_g;
