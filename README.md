@@ -1,6 +1,6 @@
 # Zebaki 🌍
 
-**Zebaki** (Swahili for *mercury*) is a prototype multi-agent tool that helps artisanal and small-scale gold miners (ASGM), and the cooperatives that support them, estimate how much mercury each batch releases to air and to tailings. A miner describes a batch in Swahili or English. The agents turn that into an estimate, a risk rating, advice and a "what if" saving, and add the batch to the cooperative's totals on a dashboard with a printable summary report.
+**Zebaki** (Swahili for *mercury*) is a prototype multi-agent tool that helps artisanal and small-scale gold miners (ASGM), and the cooperatives that support them, estimate how much mercury each batch releases to air and leaves in tailings. A miner describes a batch in Swahili or English. The agents turn that into an estimate, a risk rating, advice and a "what if" saving, and add the batch to the cooperative's totals on a dashboard with a printable summary report.
 
 Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
@@ -10,7 +10,7 @@ Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
 ## The problem
 
-Artisanal gold miners use mercury to capture gold from ore. Much of it is lost to tailings and soil, and much of the rest is released to the air when the amalgam is burned in the open. Most miners have no simple way to know how much mercury they lose per batch, or what a cleaner method would save.
+Artisanal gold miners use mercury to capture gold from ore. Much of it is lost to tailings and soil, and much of the rest is released to the air when the amalgam is burned in the open. Published estimates put the global share at about 59% to land and water and 41% to the atmosphere. Most miners have no simple way to know how much mercury they lose per batch, or what a cleaner method would save.
 
 ## Who it is for
 
@@ -48,6 +48,16 @@ flowchart TD
 
 **Two ways to run it:** the command-line demo (`zebaki.jac`) walks the graph with a Jac walker to produce the totals, while the web version (`server.jac`) produces the same totals with a function. Both use the same estimator and graph.
 
+## Worked example
+
+A miner reports: *"Nimetumia gramu 50 za zebaki kwa kilo 200 za mchanga mzima"* (50 g of mercury on 200 kg of whole ore, burning method not stated).
+
+1. The intake agent reads 50 g, 200 kg, whole-ore amalgamation, and an unknown burning method.
+2. The estimator treats the unknown burning as the worst case, so the batch is rated **HIGH**.
+3. With the placeholder factors, 75% (37.5 g) goes to tailings and the remaining 12.5 g is released to air.
+4. The what-if calculator switches the same batch to concentrate + retort. Tailings fall to 5 g and air to about 3.6 g. The saving is **40.5 g**.
+5. The batch is added to the cooperative totals and the dashboard updates.
+
 ## Features
 
 - **English and Kiswahili.** English is the default. Choose Kiswahili from the dropdown to translate the labels, the dashboard, the table and the summary report. The advice is written in Swahili in both modes.
@@ -64,9 +74,22 @@ Zebaki measures impact in **grams of mercury**:
 - **Left in tailings:** left in soil and water, mainly from whole-ore amalgamation.
 - **Could have saved:** the grams that switching to concentrate + retort would keep out of the air and tailings, shown for each batch.
 
+## Sources and calibration
+
+Published figures (Springer, DOI [10.1007/s40831-021-00394-8](https://doi.org/10.1007/s40831-021-00394-8), which cites AMAP/UNEP):
+
+- Globally, 59.3% of ASGM mercury is lost to land and water and 40.7% is emitted to the atmosphere.
+- Whole-ore amalgamation can lose up to 15 g of mercury per gram of gold produced. The global average is 2.6 g per gram.
+- Whole-ore amalgamation accounts for 75% of losses in the Philippines and 50% in Mongolia. These are shares of national losses.
+- Concentrate amalgamation requires 1–3 g of mercury per gram of gold. This is input, not loss.
+
+**What the sources do not provide:** a tailings-versus-air split for each method, or a retort capture rate.
+
+**What this means for the model:** the loss factors in `server.jac` (75% to tailings for whole ore, 10% for concentrate, 90% retort capture) are placeholders. They are not derived from these sources. The 75% in the Philippines figure is a share of national losses, so it should not be read as the model's tailings factor. Calibrate the factors against field measurements before any real use.
+
 ## Limitations
 
-- **The loss factors are illustrative assumptions.** The values in `server.jac` (for example 75% tailings loss for whole-ore amalgamation and 90% retort capture) are placeholders. They are not yet validated against field data or published measurements, and must be replaced with cited figures before any real use.
+- **The loss factors are illustrative placeholders.** They are not taken from a specific study and are not validated against field data or measurements. They must be calibrated before any real use.
 - **Estimates, not measurements.** Zebaki does not measure mercury in air, water or soil.
 - **AI reads free text.** Unclear or incomplete messages may be misread. Missing details are marked `UNKNOWN`, treated as worst case, and flagged to the miner.
 - **Advice is AI-generated.** It is not checked by the rules and should be reviewed before it is given to miners.
