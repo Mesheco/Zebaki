@@ -20,9 +20,9 @@ obj Estimate {
 }
 
 # ---------------------------------------------------------------
-# LOSS FACTORS - PROTOTYPE ASSUMPTIONS.
-# Check these against UNEP / Minamata Convention ASGM guidance
-# before you submit, and cite the source in your Devpost write-up.
+# LOSS FACTORS - ILLUSTRATIVE ASSUMPTIONS.
+# These values are not yet validated against field data or published
+# measurements. Replace them with cited figures before any real-world use.
 # ---------------------------------------------------------------
 # Share of the mercury used that ends up in tailings (soil/water).
 # The rest stays in the amalgam and is released when it is burned.
@@ -42,7 +42,7 @@ def extract_batch(message: str) -> Batch by llm(temperature=None);
 
 # ---------- Agent 2: Estimator (rules, no AI guessing) ----------
 def estimate(b: Batch) -> Estimate {
-    assumed = (b.amalgamation == Amalgamation.UNKNOWN) or (b.burning == Burning.UNKNOWN);
+    assumed: bool = (b.amalgamation == Amalgamation.UNKNOWN) or (b.burning == Burning.UNKNOWN);
 
     to_tailings: float = b.mercury_g * TAILINGS_SHARE[b.amalgamation];
     in_amalgam: float = b.mercury_g - to_tailings;
@@ -51,14 +51,16 @@ def estimate(b: Batch) -> Estimate {
     to_air: float = in_amalgam;
     if b.burning == Burning.RETORT {
         to_air = in_amalgam * (1 - RETORT_CAPTURE);
-    } elif b.burning == Burning.NONE {
+    }
+    if b.burning == Burning.NONE {
         to_air = 0.0;
     }
 
-    risk = "LOW";
+    risk: str = "LOW";
     if (b.amalgamation == Amalgamation.WHOLE_ORE) or (b.burning == Burning.OPEN_BURNING) {
         risk = "HIGH";
-    } elif assumed {
+    }
+    if risk == "LOW" and assumed {
         risk = "MEDIUM";
     }
 
@@ -92,31 +94,6 @@ node BatchRecord {
     has to_air_g: float;
     has to_tailings_g: float;
     has risk: str;
-}
-
-# Adds one batch report to a miner (creates the miner if new)
-def log_batch(coop: Cooperative, miner_name: str, message: str) -> BatchRecord {
-    b = extract_batch(message);
-    e = estimate(b);
-
-    m: Miner | None = None;
-    for x in [coop --> [?:Miner]] {
-        if x.name == miner_name {
-            m = x;
-        }
-    }
-    if m is None {
-        m = (coop ++> Miner(name=miner_name))[0];
-    }
-
-    rec = (m ++> BatchRecord(
-        message=message,
-        mercury_g=b.mercury_g,
-        to_air_g=e.to_air_g,
-        to_tailings_g=e.to_tailings_g,
-        risk=e.risk
-    ))[0];
-    return rec;
 }
 
 # ---------- Agent 4: Impact (walks the graph and adds up) ----------
