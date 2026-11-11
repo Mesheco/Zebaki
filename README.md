@@ -76,20 +76,19 @@ Zebaki measures impact in **grams of mercury**:
 
 ## Sources and calibration
 
-Published figures (Springer, DOI [10.1007/s40831-021-00394-8](https://doi.org/10.1007/s40831-021-00394-8), which cites AMAP/UNEP):
+**Retort capture.** The UNEP/Artisanal Gold Council practical retort guide states that a good field retort lets about 5–20% of mercury vapour escape, so 80–95% is captured. The model uses 90%, which is within this range. A peer-reviewed study in Nambija, Ecuador (*Minerals*) reported 2.08–11.97% of mercury not recovered in retort tests, or 88–98% recovered. The UNEP ASGM toolkit's worked example shows an 80% reduction when a retort is used, but it is an illustration, not a measured efficiency.
 
-- Globally, 59.3% of ASGM mercury is lost to land and water and 40.7% is emitted to the atmosphere.
-- Whole-ore amalgamation can lose up to 15 g of mercury per gram of gold produced. The global average is 2.6 g per gram.
-- Whole-ore amalgamation accounts for 75% of losses in the Philippines and 50% in Mongolia. These are shares of national losses.
-- Concentrate amalgamation requires 1–3 g of mercury per gram of gold. This is input, not loss.
+**Open burning.** A field study in Burkina Faso (*Scientific Reports*) measured about 8.0 g of elemental mercury released from about 16 g of gold–mercury amalgam during one burn. This supports treating open burning as a high-release method.
 
-**What the sources do not provide:** a tailings-versus-air split for each method, or a retort capture rate.
+**Whole-ore amalgamation.** The Springer article (DOI [10.1007/s40831-021-00394-8](https://doi.org/10.1007/s40831-021-00394-8), citing AMAP/UNEP) reports 59.3% of ASGM mercury lost to land and water and 40.7% to the atmosphere, globally. It also reports losses of up to 15 g of mercury per gram of gold for whole-ore amalgamation, and a global average of 2.6 g per gram.
 
-**What this means for the model:** the loss factors in `server.jac` (75% to tailings for whole ore, 10% for concentrate, 90% retort capture) are placeholders. They are not derived from these sources. The 75% in the Philippines figure is a share of national losses, so it should not be read as the model's tailings factor. Calibrate the factors against field measurements before any real use.
+**What is not sourced.** The tailings fraction (75% for whole ore, 10% for concentrate) is a placeholder. None of the sources above gives a tailings-versus-air split for each method. The Philippines and Mongolia figures (75% and 50%) are shares of national losses and should not be read as the model's tailings factor.
+
+The studies are not controlled side-by-side comparisons, so they do not give a precise universal reduction. Treat the model's outputs as estimates.
 
 ## Limitations
 
-- **The loss factors are illustrative placeholders.** They are not taken from a specific study and are not validated against field data or measurements. They must be calibrated before any real use.
+- **The loss factors are illustrative placeholders.** The retort capture rate is within published ranges, but the tailings fraction is not sourced. All factors must be calibrated against field measurements before any real use.
 - **Estimates, not measurements.** Zebaki does not measure mercury in air, water or soil.
 - **AI reads free text.** Unclear or incomplete messages may be misread. Missing details are marked `UNKNOWN`, treated as worst case, and flagged to the miner.
 - **Advice is AI-generated.** It is not checked by the rules and should be reviewed before it is given to miners.
