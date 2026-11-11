@@ -289,6 +289,32 @@ def switch_saving(b: Batch) -> dict {
     };
 }
 
+# ---------- Three-method comparison (MODELLED) ----------
+def scenario_row(method: str, b: Batch, amal: Amalgamation, burn: Burning) -> dict {
+    s = Batch(
+        ore_kg=b.ore_kg,
+        mercury_g=b.mercury_g,
+        amalgamation=amal,
+        burning=burn
+    );
+    e = estimate(s);
+    return {
+        "method": method,
+        "to_air_g": e.to_air_g,
+        "to_tailings_g": e.to_tailings_g,
+        "total_g": int((e.to_air_g + e.to_tailings_g) * 10 + 0.5) / 10,
+        "status": STATUS_MODEL
+    };
+}
+
+def scenarios(b: Batch) -> list {
+    return [
+        scenario_row("open", b, b.amalgamation, Burning.OPEN_BURNING),
+        scenario_row("retort", b, b.amalgamation, Burning.RETORT),
+        scenario_row("concentrate", b, Amalgamation.CONCENTRATE, Burning.RETORT)
+    ];
+}
+
 # Step 1 of the new flow: extract and estimate, but do NOT save.
 # The miner reviews the extracted values before anything is recorded.
 walker:pub preview_batch {
@@ -301,7 +327,8 @@ walker:pub preview_batch {
             "batch": batch_view(b),
             "estimate": estimate_view(e),
             "advice": advise(b, e),
-            "if_switched": switch_saving(b)
+            "if_switched": switch_saving(b),
+            "scenarios": scenarios(b)
         };
     }
 }
@@ -385,6 +412,7 @@ walker:pub analyse_batch {
             "estimate": estimate_view(e),
             "advice": advise(b, e),
             "if_switched": switch_saving(b),
+            "scenarios": scenarios(b),
             "impact": impact_summary(coop)
         };
     }

@@ -161,6 +161,9 @@
   .about ul { padding-left: 20px; margin: 8px 0 0; }
   .about li { margin-bottom: 6px; }
 
+  .scen-title { font-size: .95rem; color: var(--forest); margin: 16px 0 6px; }
+  table.scen th, table.scen td { padding: 8px 6px; font-size: .9rem; }
+
   /* Responsive */
   @media (max-width: 860px) {
     .app { grid-template-columns: 1fr; }
@@ -324,6 +327,7 @@
         </div>
         <p class="muted" id="r-method"></p>
         <div class="stat saved"><b id="r-saved">–</b><span id="r-saved-label" data-i18n="saved_label">grams that switching to concentrate + retort would save</span><br><span class="tag" data-tag="MODELLED">MODELLED</span></div>
+        <div id="scenarios"></div>
         <div class="advice"><b data-i18n="advice_label">Ushauri</b> <span id="advice"></span></div>
 
         <button id="confirm" type="button" data-i18n="btn_confirm">Confirm and save</button>
@@ -416,6 +420,9 @@
       report_empty: "No batches have been recorded yet.",
       report_text: "{b} batches from {n} {miners} recorded {used} g of mercury. An estimated {air} g was released to air and {tail} g was left in tailings, a total of {lost} g lost. {high} of {b} batches were rated high risk.",
       report_status: "Air figures are estimates. Tailings figures are NOT VALIDATED. {ok} of {b} batches have complete information.",
+      scen_title: "Compare methods for this batch", scen_method: "Method", scen_air: "To air (g)", scen_tail: "To tailings (g)", scen_total: "Total lost (g)",
+      scen_open: "Open burning", scen_retort: "Retort", scen_concentrate: "Concentrate + retort",
+      scen_note: "Modelled comparison using the same placeholder factors. Not measured results.",
       miner_one: "miner", miner_many: "miners",
       report_note: "All figures are estimates based on illustrative loss factors, not measurements. Switching savings are shown for each batch in its result card."
     },
@@ -472,6 +479,9 @@
       report_empty: "Hakuna kundi lililorekodiwa bado.",
       report_text: "Makundi {b} kutoka kwa {n} {miners} yamerekodi jumla ya gramu {used} za zebaki. Takriban gramu {air} zimetolewa hewani na gramu {tail} zimebaki kwenye tailings, jumla ya gramu {lost} zilizopotea. Makundi {high} kati ya {b} yamepimwa kuwa hatari kubwa.",
       report_status: "Takwimu za hewani ni makadirio. Takwimu za tailings hazijathibitishwa. Makundi {ok} kati ya {b} yana taarifa kamili.",
+      scen_title: "Linganisha njia kwa kundi hili", scen_method: "Njia", scen_air: "Hewani (g)", scen_tail: "Tailings (g)", scen_total: "Jumla iliyopotea (g)",
+      scen_open: "Kuchoma wazi", scen_retort: "Retort", scen_concentrate: "Concentrate + retort",
+      scen_note: "Ulinganisho wa mfano kwa kutumia viwango vile vile vya mfano. Si matokeo yaliyopimwa.",
       miner_one: "mchimbaji", miner_many: "wachimbaji",
       report_note: "Takwimu zote ni makadirio kulingana na viwango vya mfano vya hasara, si vipimo. Akiba ya kubadili njia inaonyeshwa kwa kila kundi kwenye kadi yake ya matokeo."
     }
@@ -542,6 +552,28 @@
     $("r-saved").textContent = s.saved_g;
     $("r-saved-label").textContent = s.saved_g > 0 ? t("saved_label") : t("saved_none");
     $("advice").textContent = p.advice;
+    renderScenarios(p.scenarios || []);
+  }
+
+  function renderScenarios(rows) {
+    const box = $("scenarios");
+    if (!rows.length) { box.innerHTML = ""; return; }
+    const body = rows.map((r) =>
+      "<tr><td>" + esc(t("scen_" + r.method)) + "</td>" +
+      "<td class='num'>" + r.to_air_g + "</td>" +
+      "<td class='num'>" + r.to_tailings_g + "</td>" +
+      "<td class='num'>" + r.total_g + "</td></tr>"
+    ).join("");
+    box.innerHTML =
+      "<h3 class='scen-title'>" + esc(t("scen_title")) +
+      " <span class='tag' data-tag='MODELLED'>" + esc(t("tag_MODELLED")) + "</span></h3>" +
+      "<div class='table-wrap'><table class='scen'><thead><tr>" +
+      "<th>" + esc(t("scen_method")) + "</th>" +
+      "<th class='num'>" + esc(t("scen_air")) + "</th>" +
+      "<th class='num'>" + esc(t("scen_tail")) + "</th>" +
+      "<th class='num'>" + esc(t("scen_total")) + "</th>" +
+      "</tr></thead><tbody>" + body + "</tbody></table></div>" +
+      "<p class='muted'>" + esc(t("scen_note")) + "</p>";
   }
 
   function showReview(p) {
