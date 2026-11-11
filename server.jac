@@ -1,5 +1,6 @@
 import from byllm.lib { Model }
 import from datetime { datetime }
+import from os { environ }
 
 glob llm = Model(model_name="anthropic/claude-haiku-5-5");
 
@@ -47,6 +48,17 @@ glob TAILINGS_SHARE: dict[Amalgamation, float] = {
 };
 # Share of mercury vapour a retort captures (not released to air).
 glob RETORT_CAPTURE: float = 0.90;
+
+# ---------- Demo access code ----------
+# Set ZEBAKI_DEMO_CODE in the hosting environment (for example on Render).
+# If it is not set, the check is off, which is what you want for local testing.
+def demo_code_ok(code: str) -> bool {
+    expected: str = environ.get("ZEBAKI_DEMO_CODE", "");
+    if expected == "" {
+        return True;
+    }
+    return code == expected;
+}
 
 # ---------- Agent 1: Intake (NLP) ----------
 """Extract mining batch details from a miner's message in Swahili or English.
@@ -319,17 +331,22 @@ def scenarios(b: Batch) -> list {
 # The miner reviews the extracted values before anything is recorded.
 walker:pub preview_batch {
     has message: str;
+    has code: str = "";
 
     can run with Root entry {
-        b = extract_batch(self.message);
-        e = estimate(b);
-        report {
-            "batch": batch_view(b),
-            "estimate": estimate_view(e),
-            "advice": advise(b, e),
-            "if_switched": switch_saving(b),
-            "scenarios": scenarios(b)
-        };
+        if not demo_code_ok(self.code) {
+            report {"error": "code"};
+        } else {
+            b = extract_batch(self.message);
+            e = estimate(b);
+            report {
+                "batch": batch_view(b),
+                "estimate": estimate_view(e),
+                "advice": advise(b, e),
+                "if_switched": switch_saving(b),
+                "scenarios": scenarios(b)
+            };
+        }
     }
 }
 
@@ -342,28 +359,68 @@ walker:pub save_batch {
     has mercury_g: float;
     has amalgamation: str;
     has burning: str;
+    has code: str = "";
 
     can run with Root entry {
-        coop = get_coop();
-        b = Batch(
-            ore_kg=self.ore_kg,
-            mercury_g=self.mercury_g,
-            amalgamation=to_amalgamation(self.amalgamation),
-            burning=to_burning(self.burning)
-        );
-        e = estimate(b);
-
-        miners = [x for x in [coop --> [?:Miner]] if x.name == self.miner];
-        if not miners {
-            miners = coop ++> Miner(name=self.miner);
-        }
-        miner = miners[0];
-
-        repeats = [r for r in [miner --> [?:BatchRecord]] if r.message == self.message and r.mercury_g == self.mercury_g];
-        if repeats {
-            report {"saved": False, "reason": "duplicate", "impact": impact_summary(coop)};
+        if not demo_code_ok(self.code) {
+            report {"error": "code"};
         } else {
-            miner ++> BatchRecord(
+            coop = get_coop();
+            b = Batch(
+                ore_kg=self.ore_kg,
+                mercury_g=self.mercury_g,
+                amalgamation=to_amalgamation(self.amalgamation),
+                burning=to_burning(self.burning)
+            );
+            e = estimate(b);
+
+            miners = [x for x in [coop --> [?:Miner]] if x.name == self.miner];
+            if not miners {
+                miners = coop ++> Miner(name=self.miner);
+            }
+            miner = miners[0];
+
+            repeats = [r for r in [miner --> [?:BatchRecord]] if r.message == self.message and r.mercury_g == self.mercury_g];
+            if repeats {
+                report {"saved": False, "reason": "duplicate", "impact": impact_summary(coop)};
+            } else {
+                miner ++> BatchRecord(
+                    message=self.message,
+                    ore_kg=b.ore_kg,
+                    mercury_g=b.mercury_g,
+                    amalgamation=b.amalgamation.name,
+                    burning=b.burning.name,
+                    to_air_g=e.to_air_g,
+                    to_tailings_g=e.to_tailings_g,
+                    risk=e.risk,
+                    assumed=e.assumed,
+                    when=datetime.now().strftime("%Y-%m-%d %H:%M")
+                );
+                report {"saved": True, "reason": "", "impact": impact_summary(coop)};
+            }
+        }
+    }
+}
+
+# Kept for compatibility: extract, estimate and save in one step (no review).
+walker:pub analyse_batch {
+    has miner: str;
+    has message: str;
+    has code: str = "";
+
+    can run with Root entry {
+        if not demo_code_ok(self.code) {
+            report {"error": "code"};
+        } else {
+            coop = get_coop();
+            b = extract_batch(self.message);
+            e = estimate(b);
+
+            miners = [x for x in [coop --> [?:Miner]] if x.name == self.miner];
+            if not miners {
+                miners = coop ++> Miner(name=self.miner);
+            }
+            miners[0] ++> BatchRecord(
                 message=self.message,
                 ore_kg=b.ore_kg,
                 mercury_g=b.mercury_g,
@@ -375,51 +432,27 @@ walker:pub save_batch {
                 assumed=e.assumed,
                 when=datetime.now().strftime("%Y-%m-%d %H:%M")
             );
-            report {"saved": True, "reason": "", "impact": impact_summary(coop)};
+
+            report {
+                "batch": batch_view(b),
+                "estimate": estimate_view(e),
+                "advice": advise(b, e),
+                "if_switched": switch_saving(b),
+                "scenarios": scenarios(b),
+                "impact": impact_summary(coop)
+            };
         }
-    }
-}
-
-# Kept for compatibility: extract, estimate and save in one step (no review).
-walker:pub analyse_batch {
-    has miner: str;
-    has message: str;
-
-    can run with Root entry {
-        coop = get_coop();
-        b = extract_batch(self.message);
-        e = estimate(b);
-
-        miners = [x for x in [coop --> [?:Miner]] if x.name == self.miner];
-        if not miners {
-            miners = coop ++> Miner(name=self.miner);
-        }
-        miners[0] ++> BatchRecord(
-            message=self.message,
-            ore_kg=b.ore_kg,
-            mercury_g=b.mercury_g,
-            amalgamation=b.amalgamation.name,
-            burning=b.burning.name,
-            to_air_g=e.to_air_g,
-            to_tailings_g=e.to_tailings_g,
-            risk=e.risk,
-            assumed=e.assumed,
-            when=datetime.now().strftime("%Y-%m-%d %H:%M")
-        );
-
-        report {
-            "batch": batch_view(b),
-            "estimate": estimate_view(e),
-            "advice": advise(b, e),
-            "if_switched": switch_saving(b),
-            "scenarios": scenarios(b),
-            "impact": impact_summary(coop)
-        };
     }
 }
 
 walker:pub get_impact {
+    has code: str = "";
+
     can run with Root entry {
-        report impact_summary(get_coop());
+        if not demo_code_ok(self.code) {
+            report {"error": "code"};
+        } else {
+            report impact_summary(get_coop());
+        }
     }
 }

@@ -393,6 +393,7 @@
       status_empty: "Please write a batch report first.",
       status_error: "Something went wrong: ",
       risk_HIGH: "HIGH", risk_MEDIUM: "MEDIUM", risk_LOW: "LOW",
+      code_prompt: "Enter the demo access code:", code_needed: "A demo access code is needed to use this page.",
       read_as: "Read as:", ore_kg: "kg ore",
       assumed_note: "(some details missing, worst case assumed)",
       stat_used: "mercury used (g)", stat_air: "released to air (g)", stat_tail: "left in tailings (g)",
@@ -452,6 +453,7 @@
       status_empty: "Tafadhali andika ripoti ya kundi kwanza.",
       status_error: "Kuna tatizo: ",
       risk_HIGH: "JUU", risk_MEDIUM: "WASTANI", risk_LOW: "CHINI",
+      code_prompt: "Weka msimbo wa majaribio:", code_needed: "Msimbo wa majaribio unahitajika kutumia ukurasa huu.",
       read_as: "Imesomwa kama:", ore_kg: "kg za mchanga",
       assumed_note: "(baadhi ya taarifa hazikuwepo, hali mbaya zaidi imedhaniwa)",
       stat_used: "zebaki iliyotumika (g)", stat_air: "iliyotoka hewani (g)", stat_tail: "iliyobaki kwenye tailings (g)",
@@ -513,17 +515,36 @@
     return d.innerHTML;
   }
 
-  async function call(walker, body) {
+  const CODE_KEY = "zebaki_demo_code";
+  function savedCode() {
+    try { return sessionStorage.getItem(CODE_KEY) || ""; } catch (e) { return ""; }
+  }
+  function saveCode(code) {
+    try { sessionStorage.setItem(CODE_KEY, code); } catch (e) { /* storage blocked: code is asked again */ }
+  }
+
+  // Sends the demo access code with every call. If the server refuses it,
+  // asks once for the code and retries. The code is kept for this browser tab only.
+  async function call(walker, body, retried) {
+    const payload = Object.assign({}, body || {}, { code: savedCode() });
     const res = await fetch("/walker/" + walker, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || {})
+      body: JSON.stringify(payload)
     });
     const json = await res.json();
     const data = json.data || {};
     if (data.error) throw new Error(data.error);
     const reports = data.reports || (data.result && data.result.reports) || [];
-    return reports[0];
+    const result = reports[0];
+    if (result && result.error === "code") {
+      if (retried) throw new Error(t("code_needed"));
+      const entered = window.prompt(t("code_prompt"), "");
+      if (entered === null || entered.trim() === "") throw new Error(t("code_needed"));
+      saveCode(entered.trim());
+      return call(walker, body, true);
+    }
+    return result;
   }
 
   function fillSelect(sel, values, prefix) {

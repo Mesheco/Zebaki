@@ -182,7 +182,7 @@ The web version runs with this start command on a hosting service such as Render
 jac start server.jac --port $PORT --no_client
 ```
 
-Set `ANTHROPIC_API_KEY` in the service's environment settings, and set `PYTHON_VERSION` to `3.12.7`. The server needs more memory than the smallest free tier provides, so use a paid instance. Free instances also sleep when idle, so the first visit may take about a minute.
+Set `ANTHROPIC_API_KEY` in the service's environment settings, and set `PYTHON_VERSION` to `3.12.7`. Set `ZEBAKI_DEMO_CODE` to a code of your choice. Visitors are asked for this code before the page works, which stops strangers from using the AI key or adding batches. If the variable is not set, the code check is off (local testing only). The server needs more memory than the smallest free tier provides, so use a paid instance. Free instances also sleep when idle, so the first visit may take about a minute.
 
 ## Licence and data
 
