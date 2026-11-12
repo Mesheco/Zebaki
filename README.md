@@ -4,7 +4,7 @@
 
 Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
-**Live demo:** [https://your-service-name.onrender.com/static/index.html](https://your-service-name.onrender.com/static/index.html) *(replace with your link once deployed)*
+**Live demo:** not hosted for this submission. Run it locally with the steps in "Run it locally" below. It takes about five minutes.
 
 **Demo video:** *(add link)*
 
@@ -183,6 +183,10 @@ jac start server.jac --port $PORT --no_client
 ```
 
 Set `ANTHROPIC_API_KEY` in the service's environment settings, and set `PYTHON_VERSION` to `3.12.7`. Set `ZEBAKI_DEMO_CODE` to a code of your choice. Visitors are asked for this code before the page works, which stops strangers from using the AI key or adding batches. If the variable is not set, the code check is off (local testing only). The server needs more memory than the smallest free tier provides, so use a paid instance. Free instances also sleep when idle, so the first visit may take about a minute.
+
+## Credits
+
+Built with Jac and jac-scale (Jaseci), byLLM, the Claude API (Anthropic), and Chart.js. Figures and factors are taken from the sources in the table above; see the Limitations section for what is placeholder.
 
 ## Licence and data
 
