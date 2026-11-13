@@ -69,7 +69,7 @@ A miner reports: *"Used 50g mercury on 200kg whole ore, burned in the open"*.
 1. The intake agent reads 50 g, 200 kg, whole-ore amalgamation, and open burning.
 2. The miner reviews the values and confirms them.
 3. The estimator rates the batch **HIGH**. With the placeholder factors, 75% (37.5 g) goes to tailings and the remaining 12.5 g is released to air.
-4. The what-if calculator switches the same batch to concentrate + retort. Tailings fall to 5 g and air to about 3.6 g. The saving is **40.5 g** (MODELLED).
+4. The what-if calculator switches the same batch to concentrate + retort. Tailings fall to 5 g and air to about 4.5 g. The saving is **40.5 g** (MODELLED).
 5. Submitting the same report and mercury amount again is rejected, so the batch is not counted twice.
 6. The batch is added to the cooperative totals and the dashboard updates.
 
