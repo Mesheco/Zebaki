@@ -1,5 +1,9 @@
 # Zebaki 🌍
 
+<p align="center">
+  <img src="assets/logo.png" alt="Zebaki logo: Mercury Impact Tracker" width="480">
+</p>
+
 **Zebaki** (Swahili for *mercury*) is a prototype multi-agent tool that helps artisanal and small-scale gold miners (ASGM), and the cooperatives that support them, estimate how much mercury each batch releases to air and leaves in tailings. A miner describes a batch in Swahili or English, checks the extracted details, and confirms it. The agents then estimate the losses, rate the risk, give advice and suggest a saving, and add the batch to the cooperative's totals on a dashboard with a printable summary report.
 
 Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
