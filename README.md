@@ -16,6 +16,12 @@ Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
 Artisanal gold miners use mercury to capture gold from ore. Much of it is lost to tailings and soil, and much of the rest is released to the air when the amalgam is burned in the open. Published estimates put the global share at about 59% to land and water and 41% to the atmosphere. Most miners have no simple way to know how much mercury they lose per batch, or what a cleaner method would save.
 
+## The solution
+
+Zebaki turns a miner's own description of a batch into a clear record. For each batch it shows how much mercury was used, how much is estimated to reach the air, how much is likely to stay in the tailings, and how much a cleaner method would save. Cooperatives can add up the batches to see their totals.
+
+Zebaki does not replace safety training, and it does not measure mercury in the environment. Its purpose is to make the losses visible, so that miners and cooperatives can choose cleaner methods, and programmes can see where support is needed.
+
 ## Who it is for
 
 - **Miners and mining cooperatives**, who want to see their losses and compare methods.
@@ -72,8 +78,17 @@ A miner reports: *"Used 50g mercury on 200kg whole ore, burned in the open"*.
 
 1. The intake agent reads 50 g, 200 kg, whole-ore amalgamation, and open burning.
 2. The miner reviews the values and confirms them.
-3. The estimator rates the batch **HIGH**. With the placeholder factors, 75% (37.5 g) goes to tailings and the remaining 12.5 g is released to air.
-4. The what-if calculator switches the same batch to concentrate + retort. Tailings fall to 5 g and air to about 4.5 g. The saving is **40.5 g** (MODELLED).
+3. The estimator rates the batch **HIGH**, because it uses whole-ore amalgamation and open burning. The calculation, with the placeholder factors, is:
+   - Tailings = 50 g × 0.75 = **37.5 g** (NOT VALIDATED)
+   - Left in the amalgam = 50 g − 37.5 g = 12.5 g
+   - Released to air = 12.5 g, because open burning sends all of it to air = **12.5 g** (ESTIMATED)
+   - Total lost = 37.5 g + 12.5 g = 50.0 g
+4. The what-if calculator switches the same batch to concentrate + retort:
+   - Tailings = 50 g × 0.10 = **5.0 g** (NOT VALIDATED)
+   - Left in the amalgam = 50 g − 5.0 g = 45.0 g
+   - Released to air = 45.0 g × (1 − 0.90) = 4.5 g, because the retort captures 90% (ESTIMATED)
+   - Total lost = 5.0 g + 4.5 g = 9.5 g
+   - Saving = 50.0 g − 9.5 g = **40.5 g** (MODELLED). The model does not calculate money or reuse of the captured mercury.
 5. Submitting the same report and mercury amount again is rejected, so the batch is not counted twice.
 6. The batch is added to the cooperative totals and the dashboard updates.
 
@@ -110,6 +125,24 @@ The table below lists each numerical factor used, its value, its source and its 
 **Not sourced:** the Philippines (75%) and Mongolia (50%) figures are shares of national losses from whole-ore amalgamation. They are not the tailings factor used in the model.
 
 **Studies are not controlled comparisons.** The Burkina Faso and Ecuador studies used different amalgam quantities and conditions, so they do not give a precise universal reduction. Treat the model's outputs as estimates.
+
+## Cleaner methods
+
+Mercury is lost mainly when amalgam is burned in the open, and when tailings are left in the environment. Cleaner methods reduce both:
+
+- **Closed retort.** The amalgam is heated in a sealed container, and the mercury vapour is condensed and captured, so it can be reused. Zebaki models a capture rate of 90%, within the range in the UNEP/Artisanal Gold Council retort guide.
+- **Concentrate before mixing with mercury.** Gravity methods, such as sluices or shaking tables, first separate the gold-bearing material, so less mercury is needed. Zebaki models this as "concentrate + retort".
+- **Mercury-free separation.** Gravity methods alone can recover some gold without any mercury. Zebaki does not yet model this option, and it is listed under next steps.
+
+Retorts still need care: the vapour is harmful, so operators must not breathe the fumes. The comparison in the app shows the difference each method makes for the same batch. These figures are modelled, not measured.
+
+## Who benefits
+
+- **Artisanal miners**, who see how much mercury each batch loses and what a cleaner method would save.
+- **Mining cooperatives**, who track losses across their members.
+- **Environmental programmes and NGOs**, who can see which batches and areas need the most support.
+
+These are intended users. No organisation uses Zebaki yet.
 
 ## Limitations
 
