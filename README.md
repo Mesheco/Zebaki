@@ -10,7 +10,7 @@ Built for the Green Shift Hacks hackathon (HackathonForEveryone, Devpost).
 
 **Live demo:** not hosted for this submission. Run it locally with the steps in "Run it locally" below. It takes about five minutes.
 
-**Demo video:** *(add link)*
+**Demo video (1 minute):** https://youtu.be/9EZerFBB6d4
 
 ## The problem
 
